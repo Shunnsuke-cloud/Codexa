@@ -17,11 +17,16 @@ function Shell() {
       try {
         const res = await getDashboardSummary();
         setTotalStudy(res.totalStudyTime ?? 0);
+        setStudyDays(res.studyDays ?? 0);
+        setTopTechnologies(res.topTechnologies ?? []);
       } catch (e) {
         setTotalStudy(0);
       }
     }
     load();
+    const handler = () => { load(); };
+    window.addEventListener('dashboard:refresh', handler as EventListener);
+    return () => { window.removeEventListener('dashboard:refresh', handler as EventListener); };
   }, []);
 
   return (

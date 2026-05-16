@@ -34,6 +34,8 @@ export default function StudyLogsPage() {
       await createLog(form);
     }
     await load();
+    // notify dashboard to refresh aggregates
+    try { window.dispatchEvent(new CustomEvent('dashboard:refresh')); } catch (e) { /* ignore */ }
     resetForm();
   }
 
@@ -41,6 +43,7 @@ export default function StudyLogsPage() {
     if (!confirm('Delete this log?')) return;
     await deleteLog(id);
     await load();
+    try { window.dispatchEvent(new CustomEvent('dashboard:refresh')); } catch (e) { /* ignore */ }
   }
 
   function handleEdit(log: StudyLog) {
