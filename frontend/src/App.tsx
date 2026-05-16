@@ -1,7 +1,12 @@
 import { Link, Route, Routes } from 'react-router-dom';
 import StudyLogsPage from './pages/StudyLogsPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import { useAuth } from './hooks/useAuth';
 
 function Shell() {
+  const { user, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -10,10 +15,22 @@ function Shell() {
             <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">Codexa</p>
             <h1 className="text-xl font-semibold">Development Log Dashboard</h1>
           </div>
-          <nav className="flex gap-4 text-sm text-slate-300">
-            <Link to="/">Home</Link>
-            <a href="http://localhost:8080/api/health">API</a>
-          </nav>
+            <nav className="flex gap-4 items-center text-sm text-slate-300">
+              <Link to="/">Home</Link>
+              <Link to="/logs">Logs</Link>
+              <a href="http://localhost:8080/api/health">API</a>
+              {user ? (
+                <>
+                  <span className="ml-4 text-sm text-slate-200">{user.name}</span>
+                  <button onClick={() => logout()} className="ml-2 text-sm text-rose-400">Logout</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login">Login</Link>
+                  <Link to="/register">Register</Link>
+                </>
+              )}
+            </nav>
         </header>
 
         <main className="grid flex-1 gap-6 lg:grid-cols-[1.5fr,1fr]">
