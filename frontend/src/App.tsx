@@ -1,11 +1,28 @@
+import React from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import StudyLogsPage from './pages/StudyLogsPage';
+import { getDashboardSummary } from './services/reportsService';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { useAuth } from './hooks/useAuth';
 
 function Shell() {
   const { user, logout } = useAuth();
+  const [totalStudy, setTotalStudy] = React.useState<number | null>(null);
+  const [studyDays, setStudyDays] = React.useState<number | null>(null);
+  const [topTechnologies, setTopTechnologies] = React.useState<Array<{technology:string; totalTime:number; count:number}>>([]);
+
+  React.useEffect(() => {
+    async function load() {
+      try {
+        const res = await getDashboardSummary();
+        setTotalStudy(res.totalStudyTime ?? 0);
+      } catch (e) {
+        setTotalStudy(0);
+      }
+    }
+    load();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -43,16 +60,18 @@ function Shell() {
               まずは認証、学習ログ、ダッシュボード、GitHub 連携、週次レポート、ヒートマップを順に積み上げられる最小構成を用意しています。
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {[
-                ['Total Study', '0h'],
-                ['Study Days', '0'],
-                ['Commits', '0'],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-400">{label}</p>
-                  <p className="mt-2 text-3xl font-semibold">{value}</p>
-                </div>
-              ))}
+              <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Total Study</p>
+                <p className="mt-2 text-3xl font-semibold">{totalStudy === null ? '—' : `${totalStudy}h`}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Study Days</p>
+                <p className="mt-2 text-3xl font-semibold">{studyDays === null ? '—' : studyDays}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Commits</p>
+                <p className="mt-2 text-3xl font-semibold">0</p>
+              </div>
             </div>
           </section>
 
@@ -66,6 +85,21 @@ function Shell() {
                 <li>週間レポート集計</li>
               </ul>
             </div>
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <h3 className="text-lg font-semibold">Top Technologies</h3>
+              <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                {topTechnologies.length === 0 ? (
+                  <li className="text-slate-500">—</li>
+                ) : (
+                  topTechnologies.map(t => (
+                    <li key={t.technology} className="flex justify-between">
+                      <span>{t.technology}</span>
+                      <span className="text-slate-400">{t.totalTime}h</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
             <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6">
               <h3 className="text-lg font-semibold">Backend Status</h3>
               <p className="mt-3 text-sm text-slate-300">Spring Boot API は /api/health から確認できます。</p>
@@ -76,6 +110,7 @@ function Shell() {
     </div>
   );
 }
+
 
 export default function App() {
   return (
