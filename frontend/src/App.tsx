@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from 'react-router-dom';
+import StudyLogsPage from './pages/StudyLogsPage';
 
 function Shell() {
   return (
@@ -62,6 +63,7 @@ function Shell() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/logs" element={<StudyLogsPage />} />
       <Route path="/*" element={<Shell />} />
     </Routes>
   );
