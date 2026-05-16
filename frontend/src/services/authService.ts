@@ -28,3 +28,24 @@ export function getStoredUser() {
   const raw = localStorage.getItem('codexa_user');
   return raw ? (JSON.parse(raw) as AuthResponse['user']) : null;
 }
+
+export function getToken(): string | null {
+  return localStorage.getItem('codexa_token');
+}
+
+export function isTokenValid(token: string | null): boolean {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return false;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload) return false;
+    if (payload.exp) {
+      const now = Math.floor(Date.now() / 1000);
+      return payload.exp > now;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
