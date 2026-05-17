@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codexa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-codexa}
+      POSTGRES_USER: ${POSTGRES_USER:-codexa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codexa_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: codexa-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/codexa}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-codexa}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-codexa_password}
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret_key}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_OAUTH_CALLBACK: ${GITHUB_OAUTH_CALLBACK:-http://localhost:8080/api/github/oauth/callback}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    container_name: codexa-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres-data:
