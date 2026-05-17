@@ -41,6 +41,8 @@ public class StudyLogServiceImpl implements StudyLogService {
                 .content(request.content())
                 .studyTime(request.studyTime())
                 .technology(request.technology())
+            .githubRepoFullName(normalize(request.githubRepoFullName()))
+            .githubRepoUrl(normalize(request.githubRepoUrl()))
                 .build();
 
         return StudyLogResponse.from(studyLogRepository.save(studyLog));
@@ -55,6 +57,8 @@ public class StudyLogServiceImpl implements StudyLogService {
         studyLog.setContent(request.content());
         studyLog.setStudyTime(request.studyTime());
         studyLog.setTechnology(request.technology());
+        studyLog.setGithubRepoFullName(normalize(request.githubRepoFullName()));
+        studyLog.setGithubRepoUrl(normalize(request.githubRepoUrl()));
 
         return StudyLogResponse.from(studyLogRepository.save(studyLog));
     }
@@ -78,5 +82,11 @@ public class StudyLogServiceImpl implements StudyLogService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "unauthenticated");
         }
         return authentication.getName().toLowerCase();
+    }
+
+    private String normalize(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

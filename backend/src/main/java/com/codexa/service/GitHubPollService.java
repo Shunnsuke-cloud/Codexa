@@ -26,6 +26,7 @@ public class GitHubPollService {
 
     private final ExternalCommitRepository externalCommitRepository;
     private final RestTemplate restTemplate;
+    private final com.codexa.repository.SyncHistoryRepository syncHistoryRepository;
 
     @Value("${GITHUB_TOKEN:}")
     private String githubToken;
@@ -44,8 +45,18 @@ public class GitHubPollService {
 
     @Transactional
     public void pollOnce() {
+        com.codexa.entity.SyncHistory hist = new com.codexa.entity.SyncHistory();
+        hist.setStartedAt(java.time.LocalDateTime.now());
+        hist.setStatus("running");
+        hist.setSyncedCount(0);
+        hist = syncHistoryRepository.save(hist);
+
         if (githubToken == null || githubToken.isBlank()) {
             logger.info("GITHUB_TOKEN not configured; skipping poll");
+            hist.setFinishedAt(java.time.LocalDateTime.now());
+            hist.setStatus("skipped");
+            hist.setMessage("GITHUB_TOKEN not configured");
+            syncHistoryRepository.save(hist);
             return;
         }
 
@@ -58,11 +69,18 @@ public class GitHubPollService {
         try {
             ResponseEntity<List> reposRes = restTemplate.exchange(reposUrl, org.springframework.http.HttpMethod.GET, req, List.class);
             List<?> repos = reposRes.getBody();
-            if (repos == null) return;
+            if (repos == null) {
+                hist.setFinishedAt(java.time.LocalDateTime.now());
+                hist.setStatus("completed");
+                hist.setMessage("no repos");
+                syncHistoryRepository.save(hist);
+                return;
+            }
 
             OffsetDateTime since = OffsetDateTime.now(ZoneOffset.UTC).minusDays(7);
             String sinceStr = ISO.format(since);
 
+            int totalSynced = 0;
             for (Object robj : repos) {
                 if (!(robj instanceof java.util.Map)) continue;
                 java.util.Map repo = (java.util.Map) robj;
@@ -116,6 +134,7 @@ public class GitHubPollService {
                         ec.setCommittedAt(committedAt);
                         try {
                             externalCommitRepository.save(ec);
+                            totalSynced++;
                         } catch (Exception ex) {
                             // unique constraint race or other DB issue: log and continue
                             logger.warn("Failed to save external commit {}: {}", sha, ex.getMessage());
@@ -126,8 +145,22 @@ public class GitHubPollService {
                 }
             }
 
+            hist.setSyncedCount(totalSynced);
+            hist.setFinishedAt(java.time.LocalDateTime.now());
+            hist.setStatus("completed");
+            hist.setMessage("OK");
+            syncHistoryRepository.save(hist);
+
         } catch (Exception e) {
             logger.error("Failed to list user repos", e);
+            hist.setFinishedAt(java.time.LocalDateTime.now());
+            hist.setStatus("failed");
+            hist.setMessage(e.getMessage());
+            syncHistoryRepository.save(hist);
         }
+    }
+
+    public java.util.List<com.codexa.entity.SyncHistory> getHistory() {
+        return syncHistoryRepository.findTop20ByOrderByStartedAtDesc();
     }
 }

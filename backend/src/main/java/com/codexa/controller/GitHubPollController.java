@@ -19,4 +19,10 @@ public class GitHubPollController {
         pollService.pollOnce();
         return ResponseEntity.ok().body(java.util.Map.of("status", "started"));
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/history")
+    public ResponseEntity<?> history() {
+        var list = pollService.getHistory();
+        return ResponseEntity.ok().body(list);
+    }
 }

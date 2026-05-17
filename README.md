@@ -1,107 +1,78 @@
 # Codexa
 
-エンジニアやプログラミング学習者向けに、GitHub活動・学習記録・技術成長を可視化する開発ログ管理サービスです。
+Codexa は GitHub 活動や学習記録を統合して可視化する開発ログ管理サービスです。
 
-## 初期構成
+## 構成 (開発)
 
-- `frontend`: React + TypeScript + Tailwind CSS + Axios + React Router
-- `backend`: Spring Boot + Spring Web + Spring Data JPA + Lombok + PostgreSQL Driver
-- `postgres`: PostgreSQL 16
+- frontend: React + TypeScript + Tailwind
+- backend: Spring Boot (Java 21)
+- db: PostgreSQL 16
 
-## 起動手順
+## 必要な環境変数
 
-1. `.env.example` を `.env` にコピーして値を確認します。
-2. `docker compose up --build` を実行します。
-3. フロントエンドは `http://localhost:3000`、バックエンドは `http://localhost:8080` で確認します。
+設定はプロジェクトルートの `.env` で行います。安全のため、実運用ではシークレットは環境変数やシークレットマネージャで管理してください。
 
-## 次に実装するもの
+- `GITHUB_CLIENT_ID` — GitHub OAuth App の Client ID
+- `GITHUB_CLIENT_SECRET` — GitHub OAuth App の Client Secret
+- `GITHUB_OAUTH_CALLBACK` — OAuth コールバック URL（例: `http://localhost:8080/api/github/oauth/callback`）
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+- `JWT_SECRET` — JWT 用の秘密鍵
+- `VITE_API_BASE_URL` — フロントが呼ぶバックエンドの URL（開発時は `http://localhost:8080`）
 
-- JWT 認証
-- 学習ログ CRUD
-- GitHub API 連携
-- 週間レポート
-- Contribution 風カレンダー
+`.env.example` をコピーしてローカルで編集してください。
 
-## 実装済み API
+## クイックスタート
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/health`
+1. `.env.example` をコピーして必要な値を設定します:
 
-JWT は `Authorization: Bearer <token>` で送信します。
+```bash
+cp .env.example .env
+```
 
-## ローカルでの確認手順（手短なガイド）
-
-1. Docker Compose でサービスを起動します（バックグラウンド）。Docker Desktop を先に起動してください。
+2. Docker Compose で起動します (開発用):
 
 ```bash
 docker compose up -d --build
 ```
 
-2. 動作確認
+3. アプリケーション確認
 
-- フロントエンド（静的コンテンツ）: http://localhost:3000
-- バックエンド ヘルスチェック: http://localhost:8080/api/health
+- フロントエンド: `http://localhost:3000`
+- バックエンド: `http://localhost:8080`
 
-ヘルスチェックはコマンドでも確認できます:
-
-```bash
-curl http://localhost:8080/api/health
-```
-
-3. バックエンドのログをフォローして起動状況を見る
-
-```bash
-docker compose logs --follow backend
-```
-
-4. バックエンドの単体テストを実行する
-
-（ローカルに Maven がある場合）
-```bash
-cd backend
-mvn test
-```
-
-（ローカルに Maven が無い場合は Docker 経由でも実行可能）
-```bash
-docker compose run --rm backend mvn test
-```
-
-5. API を手動で叩いて確認する（認証付き）
-
-- まず登録またはログインして JWT を取得します。
-
-```bash
-curl -s -X POST http://localhost:8080/api/auth/login \
-	-H 'Content-Type: application/json' \
-	-d '{"email":"you@example.com","password":"your_password"}'
-```
-
-レスポンスの `token` を取り出したら、`/api/reports/summary` を呼び出します:
-
-```bash
-curl http://localhost:8080/api/reports/summary \
-	-H "Authorization: Bearer <token>"
-```
-
-6. フロント開発サーバーでホットリロードを使いたいとき
-
-```bash
-cd frontend
-npm install
-npm run dev
-# ブラウザで表示される URL（例: http://localhost:5173）を確認
-```
-
-7. 停止
+4. 停止
 
 ```bash
 docker compose down
 ```
 
----
+## 開発ワークフロー
 
-問題が起きたら、まず `docker compose logs backend` でログを確認してください。データベース接続エラーが出る場合は `postgres` コンテナが起動しているか、`5432` ポートの競合や `.env` の設定を確認してください。
+- フロントのホットリロードを使う場合:
 
-必要ならこの README に「トラブルシュート」セクションを追記します。どの項目を追加しますか？
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- バックエンドのテスト（ローカル Maven がある場合）:
+
+```bash
+cd backend
+mvn test
+```
+
+## 実装済みの主な機能
+
+- ユーザー登録 / ログイン (JWT)
+- 学習ログ CRUD
+- GitHub OAuth 連携（リポジトリ一覧、コミット取得、同期）
+
+## トラブルシュート（簡易）
+
+- 起動しない場合: `docker compose logs backend` でログを確認してください。
+- DB 接続エラー: `postgres` コンテナが正常に起動しているか、`.env` の接続文字列とポートを確認してください。
+- フロントが API にアクセスできない場合: ブラウザの DevTools Network でリクエスト先（Origin / Request URL）と CORS エラーを確認してください。
+
+不明点や追加で書いてほしい項目があれば教えてください。
