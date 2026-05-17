@@ -12,3 +12,17 @@ export async function getDashboardSummary() {
     topTechnologies: { technology: string; totalTime: number; count: number }[];
   };
 }
+
+export async function getWeeklyReport() {
+  const token = localStorage.getItem('codexa_token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await axios.get(`${apiBase}/api/reports/weekly`, { headers });
+  return res.data as { days: { date: string; totalTime: number }[] };
+}
+
+export async function postGithubSync() {
+  const token = localStorage.getItem('codexa_token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await axios.post(`${apiBase}/api/github/sync`, {}, { headers });
+  return res.data as any;
+}

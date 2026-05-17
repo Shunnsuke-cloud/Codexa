@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import StudyLogsPage from './pages/StudyLogsPage';
-import { getDashboardSummary } from './services/reportsService';
+import { getDashboardSummary, getWeeklyReport, postGithubSync } from './services/reportsService';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OperationsPage from './pages/OperationsPage';
@@ -12,6 +12,8 @@ function Shell() {
   const [totalStudy, setTotalStudy] = React.useState<number | null>(null);
   const [studyDays, setStudyDays] = React.useState<number | null>(null);
   const [topTechnologies, setTopTechnologies] = React.useState<Array<{technology:string; totalTime:number; count:number}>>([]);
+  const [weeklyReport, setWeeklyReport] = React.useState<{date:string; totalTime:number}[] | null>(null);
+  const [syncing, setSyncing] = React.useState(false);
 
   React.useEffect(() => {
     let mounted = true;
@@ -107,6 +109,24 @@ function Shell() {
           </section>
 
           <aside className="grid gap-4">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <h3 className="text-lg font-semibold">GitHub 連携</h3>
+                <p className="mt-3 text-sm text-slate-300">GitHub からリポジトリ情報を同期して、週間レポートの補完等に使います。</p>
+                <div className="mt-4 flex gap-2">
+                  <button onClick={async () => {
+                    setSyncing(true);
+                    try { await postGithubSync(); } catch(e) { /* ignore */ } finally { setSyncing(false); }
+                  }} className="rounded bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-900">{syncing ? '同期中...' : 'GitHub 同期'}</button>
+                  <button onClick={async () => { const r = await getWeeklyReport(); setWeeklyReport(r.days); }} className="rounded border px-3 py-2 text-sm">週間取得</button>
+                </div>
+                {weeklyReport && (
+                  <ul className="mt-3 text-sm text-slate-300">
+                    {weeklyReport.map(d => (
+                      <li key={d.date} className="flex justify-between">{d.date}<span className="text-slate-400">{d.totalTime}h</span></li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
               <h3 className="text-lg font-semibold">Now Building</h3>
               <ul className="mt-4 space-y-3 text-sm text-slate-300">

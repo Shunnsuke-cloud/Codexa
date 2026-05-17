@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import com.codexa.dto.reports.WeeklyReportResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -43,5 +49,39 @@ public class ReportsController {
         }
 
         return new DashboardSummaryResponse(total, days, topList);
+    }
+
+    @GetMapping("/weekly")
+    public WeeklyReportResponse weekly() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication == null ? null : authentication.getName();
+        if (email == null) {
+            return new WeeklyReportResponse(new ArrayList<>());
+        }
+
+        List<Object[]> rows = studyLogRepository.findWeeklyStudyByUserEmail(email);
+        List<WeeklyReportResponse.DayEntry> days = new ArrayList<>();
+        DateTimeFormatter fmt = DateTimeFormatter.ISO_LOCAL_DATE;
+        // Create map of last 7 days to ensure zero entries appear
+        LocalDate today = LocalDate.now();
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate d = today.minusDays(i);
+            map.put(d.format(fmt), 0);
+        }
+
+        for (Object[] r : rows) {
+            String dateStr = r[0] == null ? null : r[0].toString();
+            Integer total = r[1] == null ? 0 : ((Number) r[1]).intValue();
+            if (dateStr != null) map.put(dateStr, total);
+        }
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate d = today.minusDays(i);
+            String k = d.format(fmt);
+            days.add(new WeeklyReportResponse.DayEntry(k, map.getOrDefault(k, 0)));
+        }
+
+        return new WeeklyReportResponse(days);
     }
 }
