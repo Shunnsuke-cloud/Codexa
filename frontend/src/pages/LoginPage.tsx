@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,6 +24,9 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md">
       <h2 className="mb-4 text-2xl font-semibold">Login</h2>
+      <p className="mb-4 text-sm text-slate-300">
+        登録済みのメールアドレスとパスワードでサインインしてください。アカウントがなければ <Link to="/register" className="text-cyan-300 underline">新規登録</Link> へ進んでください。
+      </p>
       <form onSubmit={handleSubmit} className="space-y-3">
         <input className="w-full p-2 rounded bg-white/3" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
         <input type="password" className="w-full p-2 rounded bg-white/3" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />

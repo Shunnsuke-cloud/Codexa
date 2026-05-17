@@ -60,7 +60,10 @@ function Shell() {
                   <button onClick={() => logout()} className="ml-2 text-sm text-rose-400">Logout</button>
                 </>
               ) : (
-                <Link to="/login">Sign In</Link>
+                <>
+                  <Link to="/login">Sign In</Link>
+                  <Link to="/register">新規登録</Link>
+                </>
               )}
             </nav>
         </header>
@@ -77,6 +80,16 @@ function Shell() {
               操作系（ログの作成・編集・削除）は別画面の「Operations」から行ってください。
             </p>
             <p className="mt-3 text-sm text-slate-400">バックエンド状態の確認: <a className="text-cyan-300 underline" href="http://localhost:8080/api/health">/api/health</a></p>
+            {!user && (
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link to="/login" className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+                  Sign In
+                </Link>
+                <Link to="/register" className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100">
+                  新規登録
+                </Link>
+              </div>
+            )}
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Total Study</p>
