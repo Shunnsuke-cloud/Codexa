@@ -4,6 +4,8 @@ export interface StudyLog {
   content: string;
   studyTime: number;
   technology: string;
+  githubRepoFullName?: string | null;
+  githubRepoUrl?: string | null;
   createdAt: string;
 }
 
@@ -12,4 +14,6 @@ export interface StudyLogRequest {
   content: string;
   studyTime: number;
   technology: string;
+  githubRepoFullName?: string | null;
+  githubRepoUrl?: string | null;
 }

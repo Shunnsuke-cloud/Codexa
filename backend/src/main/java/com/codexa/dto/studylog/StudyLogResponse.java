@@ -10,6 +10,8 @@ public record StudyLogResponse(
         String content,
         Integer studyTime,
         String technology,
+    String githubRepoFullName,
+    String githubRepoUrl,
         LocalDateTime createdAt) {
 
     public static StudyLogResponse from(StudyLog studyLog) {
@@ -19,6 +21,8 @@ public record StudyLogResponse(
                 studyLog.getContent(),
                 studyLog.getStudyTime(),
                 studyLog.getTechnology(),
+                studyLog.getGithubRepoFullName(),
+                studyLog.getGithubRepoUrl(),
                 studyLog.getCreatedAt());
     }
 }
