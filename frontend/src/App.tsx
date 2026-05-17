@@ -4,6 +4,7 @@ import StudyLogsPage from './pages/StudyLogsPage';
 import { getDashboardSummary } from './services/reportsService';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import OperationsPage from './pages/OperationsPage';
 import { useAuth } from './hooks/useAuth';
 
 function Shell() {
@@ -13,21 +14,35 @@ function Shell() {
   const [topTechnologies, setTopTechnologies] = React.useState<Array<{technology:string; totalTime:number; count:number}>>([]);
 
   React.useEffect(() => {
+    let mounted = true;
     async function load() {
       try {
         const res = await getDashboardSummary();
+        if (!mounted) return;
         setTotalStudy(res.totalStudyTime ?? 0);
         setStudyDays(res.studyDays ?? 0);
         setTopTechnologies(res.topTechnologies ?? []);
       } catch (e) {
+        if (!mounted) return;
         setTotalStudy(0);
+        setStudyDays(0);
+        setTopTechnologies([]);
       }
     }
-    load();
-    const handler = () => { load(); };
+
+    // only load when a user is logged in
+    if (user) {
+      load();
+    } else {
+      setTotalStudy(null);
+      setStudyDays(null);
+      setTopTechnologies([]);
+    }
+
+    const handler = () => { if (user) load(); };
     window.addEventListener('dashboard:refresh', handler as EventListener);
-    return () => { window.removeEventListener('dashboard:refresh', handler as EventListener); };
-  }, []);
+    return () => { mounted = false; window.removeEventListener('dashboard:refresh', handler as EventListener); };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -39,31 +54,29 @@ function Shell() {
           </div>
             <nav className="flex gap-4 items-center text-sm text-slate-300">
               <Link to="/">Home</Link>
-              <Link to="/logs">Logs</Link>
-              <a href="http://localhost:8080/api/health">API</a>
               {user ? (
                 <>
-                  <span className="ml-4 text-sm text-slate-200">{user.name}</span>
+                  <Link to="/operations" className="ml-2 text-sm text-slate-200">{user.name}</Link>
                   <button onClick={() => logout()} className="ml-2 text-sm text-rose-400">Logout</button>
                 </>
               ) : (
-                <>
-                  <Link to="/login">Login</Link>
-                  <Link to="/register">Register</Link>
-                </>
+                <Link to="/login">Sign In</Link>
               )}
             </nav>
         </header>
 
         <main className="grid flex-1 gap-6 lg:grid-cols-[1.5fr,1fr]">
           <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/20 via-slate-900 to-indigo-500/20 p-8 shadow-2xl shadow-cyan-950/30">
-            <p className="mb-3 text-sm text-cyan-200">Progress visibility for engineers and learners</p>
+            <p className="mb-3 text-sm text-cyan-200">Codexa サーバーの概要</p>
             <h2 className="max-w-2xl text-4xl font-bold leading-tight sm:text-5xl">
-              学習・GitHub活動・技術成長をひとつに集約する基盤をつくる
+              このサーバーについて
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-              まずは認証、学習ログ、ダッシュボード、GitHub 連携、週次レポート、ヒートマップを順に積み上げられる最小構成を用意しています。
+              この開発用サーバーは以下の機能を提供します：
+              認証（JWT ベース）、学習ログの CRUD、ダッシュボード集計、外部サービス連携（例：GitHub）。
+              操作系（ログの作成・編集・削除）は別画面の「Operations」から行ってください。
             </p>
+            <p className="mt-3 text-sm text-slate-400">バックエンド状態の確認: <a className="text-cyan-300 underline" href="http://localhost:8080/api/health">/api/health</a></p>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Total Study</p>
@@ -120,7 +133,10 @@ function Shell() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/logs" element={<StudyLogsPage />} />
+      <Route path="/operations" element={<OperationsPage />} />
       <Route path="/*" element={<Shell />} />
     </Routes>
   );
