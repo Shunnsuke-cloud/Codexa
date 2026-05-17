@@ -16,7 +16,7 @@ export default function RegisterPage() {
     try {
       const res = await register({ name, email, password });
       setUser(res.user);
-      navigate('/logs');
+      navigate('/operations', { replace: true });
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Registration failed');
     }
